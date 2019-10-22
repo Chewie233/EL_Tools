@@ -9,4 +9,4 @@ do
     ((t--))
     echo ${t}
 done
-#test push empty folder
+#test push empty folders
