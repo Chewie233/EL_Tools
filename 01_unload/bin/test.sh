@@ -9,9 +9,6 @@ do
     ((t--))
     echo ${t}
 done
-<<<<<<< HEAD
 
 #test tracking
-=======
 #test push empty folders
->>>>>>> version
