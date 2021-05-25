@@ -107,6 +107,8 @@ done;
 
 wait;
 
+exec 1000>&-;
+
 #for ((i = `expr ${startline} + 1`; i < ${endline}; i++))
 #do
 #

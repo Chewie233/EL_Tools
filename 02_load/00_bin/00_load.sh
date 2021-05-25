@@ -61,46 +61,73 @@ INPUT
     echo "${bef_tab_name}|${cal_num}|" >> ${calFile}
 done
 
+#----------------------------start multi processes------------------------------#
+trap "exec 1000>&-;exec 1000<&-;exit 0" 2
+Pfifo="/tmp/$$.fifo"
+mkfifo ${Pfifo}
+exec 1000<>${Pfifo}
+rm -f ${Pfifo}
+
+for((i=0; i<${process}; i++))
+do
+    echo
+done >&1000
+
+
 #loading
+declare count=0
 echo -e "\n\
 +------------------Don't panic. Keep calm and carry on.----------------------+"
 
 for cursor in `sed -n "${tabListBegin},${tabListEnd}p" ${cfgFile}`
 do
-    table_name=`echo ${cursor} | awk -F"|" '{print $1}'`
-    file_nmae=`echo ${cursor} | awk -F"|" '{print $2}'`
-    struct="${ctlpath}${table_name}_struct.tmp"
-    ctl_file="${ctlpath}${table_name}.ctl"
-    log_file="${logpath}${table_name}.log"
-    lod_file="${logpath}${table_name}.lod"
+    read -u1000
+    table_name[${count}]=`echo ${cursor} | awk -F"|" '{print $1}'`
+    file_nmae[${count}]=`echo ${cursor} | awk -F"|" '{print $2}'`
+    struct[${count}]="${ctlpath}${table_name}_struct.tmp"
+    ctl_file[${count}]="${ctlpath}${table_name}.ctl"
+    log_file[${count}]="${logpath}${table_name}.log"
+    lod_file[${count}]="${logpath}${table_name}.lod"
     
     sqlplus -S ${dsn} <<INPUT > ${struct}
-    desc ${table_name};
+    desc ${table_name[${count}]};
 INPUT
     
-    fields=`cat ${struct} | grep -v "Name" | grep -v "-" | grep -v "^ *$" | \
+    fields[${count}]=`cat ${struct[${count}]} | grep -v "Name" | grep -v "-" | grep -v "^ *$" | \
             awk '{if ($2=="DATE") print $1," \"to_date(:"$1\
             ", '\''yyyy-mm-dd hh24:mi:ss'\'')\","; else print $1","}'`
     
     echo "\
     load data
-    infile '${datpath}${file_nmae}'
-    append into table ${table_name}
+    infile '${datpath}${file_nmae[${count}]}'
+    append into table ${table_name[${count}]}
     fields terminated by '${separatore}'
     (
-    ${fields})" > ${ctl_file}
+    ${fields[${count}]})" > ${ctl_file[${count}]}
     
-    `sed -i 's/,)/)/g' ${ctl_file}`
+    `sed -i 's/,)/)/g' ${ctl_file[${count}]}`
 
-    echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name} start<<<<"
-    sqlldr ${dsn} control=${ctl_file} log=${log_file} > ${lod_file}
-    err_num=`grep "ORA-" ${log_file} | wc -l` 
-    if [[ ${err_num}==0 ]]; then
-        echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name} finished>>>>"
-    else
-        echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name} meet errors /0.0\\"
-    fi
+    {
+        echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name[${count}]} start<<<<"
+        sqlldr ${dsn} control=${ctl_file[${count}]} log=${log_file[${count}]} > ${lod_file[${count}]}
+        err_num[${count}]=`grep "ORA-" ${log_file[${count}]} | wc -l` 
+        if [[ ${err_num[${count}]}==0 ]]; then
+            echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name[${count}]} finished>>>>"
+        else
+            echo "[`date '+%Y-%m-%d %H:%M:%S'`]${table_name[${count}]} meet errors /0.0\\"
+        fi
+
+        sleep 1
+
+        echo >&1000
+    }&
+
+    ((count++))
+
 done
+
+wait
+exec 1000>&-
 
 echo -e "\n\
 +------------------So long, and thanks for all the fish----------------------+"

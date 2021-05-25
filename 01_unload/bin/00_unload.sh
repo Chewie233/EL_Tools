@@ -17,13 +17,13 @@ splitField=`grep "\[splitField\]" ../cfg/01_unload.cfg -a1 | tail -1`
 dsn="${dbip}:${dbport}/${dbsid}"
 echo ${splitField}
 echo ${dsn}
-#dsn="10.17.85.21:1521/rec18c"
-#sql="\"select a.* from vccmd a\""
-#sql2="\"select a.* from mmlcmd a\""
-#data="\"../data/vccmd.txt\""
-#data2="\"../data/mmlcmd.txt\""
-#log="\"../log/vccmd.log\""
-#log2="\"../log/mmlcmd.log\""
+#dsn="127.0.0.0:49161/xe"
+#sql="\"select a.* from table1 a\""
+#sql2="\"select a.* from table2 a\""
+#data="\"../data/table1.txt\""
+#data2="\"../data/table2.txt\""
+#log="\"../log/table1.log\""
+#log2="\"../log/table2.log\""
 #field="\"|\""
 #
 #if [ ! -d "../data" ]; then
@@ -40,8 +40,8 @@ echo ${dsn}
 #    mkdir ../log
 #fi
 #
-#cmd="sqluldr2 cc/cc@${dsn} query=${sql} file=${data} field=${field} log=${log}"
-#cmd2="sqluldr2 cc/cc@${dsn} query=${sql2} file=${data2} field=${field} log=${log2}"
+#cmd="sqluldr2 zhuyu/zhuyu@${dsn} query=${sql} file=${data} field=${field} log=${log}"
+#cmd2="sqluldr2 zhuyu/zhuyu@${dsn} query=${sql2} file=${data2} field=${field} log=${log2}"
 ##echo ${cmd} | sh
 #echo ${cmd} | awk '{run=$0;system(run)}' &
 #echo ${cmd2} | awk '{run=$0;system(run)}' &
